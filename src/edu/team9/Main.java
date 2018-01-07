@@ -14,6 +14,8 @@ import edu.team9.io.Reader;
  * @author È«×é
  *
  */
+ 
+ //for test
 public class Main {
 
 	public static void main(String[] args) {
