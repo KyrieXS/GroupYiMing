@@ -18,7 +18,9 @@ public enum  Type {
 		REF, //引用
 		IMG, //图片
 		LINK, //连接
-		EM,  //强调
+		EM,  //斜体强调
+		STRONG,//粗体强调
+		EMSTRONG,//斜体粗体强调
 		QUOTE,  //代码块
 		TABLE,  //表格
 		HR  //分割线

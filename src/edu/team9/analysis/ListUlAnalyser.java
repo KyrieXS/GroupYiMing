@@ -3,6 +3,8 @@ package edu.team9.analysis;
 import java.util.LinkedList;
 import java.util.List;
 
+import edu.team9.debug.Assert;
+import edu.team9.debug.DebugConfig;
 import edu.team9.element.Token;
 import edu.team9.element.Type;
 import edu.team9.element.Value;
@@ -16,6 +18,9 @@ public class ListUlAnalyser extends Analyser{
 
 	@Override
 	public List<Token> handle(List<Token> list) {
+		if(DebugConfig.CHECK_ANALYSER_LISTUL){
+			Assert.notNull(list, "传入的List<Token>为空");
+		}
 		List<Token> newList = new LinkedList();
 		String val = null;
 		for(int i = 0;i < list.size();i++){
@@ -37,6 +42,9 @@ public class ListUlAnalyser extends Analyser{
 				}
 			}
 			
+		}
+		if(DebugConfig.CHECK_RENDERING_LISTUL){
+			Assert.notNull(newList, "传出的List<Token>为空");
 		}
 		return newList;
 	}

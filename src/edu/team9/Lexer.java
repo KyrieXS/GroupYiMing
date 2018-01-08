@@ -6,6 +6,8 @@ import java.io.StringReader;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.omg.CosNaming.NamingContextPackage.NotEmpty;
+
 import edu.team9.analysis.Analyser;
 import edu.team9.analysis.CodeAnalyser;
 import edu.team9.analysis.H1Analyser;
@@ -19,7 +21,10 @@ import edu.team9.analysis.ListUlAnalyser;
 import edu.team9.analysis.ParagraphAnalyser;
 import edu.team9.analysis.QUOTEAnalyser;
 import edu.team9.analysis.RefAnalyser;
+import edu.team9.analysis.StrongAnalyser;
 import edu.team9.analysis.TableAnalyser;
+import edu.team9.debug.Assert;
+import edu.team9.debug.DebugConfig;
 import edu.team9.element.Token;
 import edu.team9.element.Value;
 
@@ -47,6 +52,9 @@ public class Lexer {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		if(DebugConfig.CHECK_LEXER){
+			Assert.notNull(lines, "传入的List<Token>为空");
+		}
 		this.lines = lines;
 	}
 	
@@ -57,6 +65,7 @@ public class Lexer {
 		analyserList.add(new QUOTEAnalyser());
 		analyserList.add(new TableAnalyser());
 		analyserList.add(new CodeAnalyser());
+		analyserList.add(new StrongAnalyser());
 		analyserList.add(new ListUlAnalyser());
 		analyserList.add(new ListOlAnalyser());
 		analyserList.add(new H2Analyser());
@@ -70,11 +79,17 @@ public class Lexer {
 	
 	public static List<Token> lex() {
 		init();
+		if(DebugConfig.CHECK_LEXER){
+			Assert.notEmpty(analyserList, "List<Analyser>为空");
+		}
 		for(int i = 0, size = analyserList.size(); i < size; i++){
 			Analyser analyser = analyserList.get(i);
 			lines = analyser.handle(lines);
 		}
-		
+		if(DebugConfig.CHECK_LEXER){
+			Assert.notNull(lines,"传入的List<Token>为空");
+			
+		}
 		return lines;
 	}
 	

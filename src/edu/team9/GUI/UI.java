@@ -6,12 +6,15 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 
 import java.awt.FlowLayout;
+import java.awt.Font;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 
 import javax.swing.JTextPane;
+import javax.swing.KeyStroke;
+import javax.swing.JButton;
 import javax.swing.JEditorPane;
 import javax.swing.JFileChooser;
 import javax.swing.JMenuBar;
@@ -19,6 +22,7 @@ import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.border.EtchedBorder; 
 import javax.swing.border.LineBorder;
@@ -35,8 +39,19 @@ import edu.team9.io.SaveAsHtml;
 
 import javax.swing.JList;
 import java.awt.SystemColor;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.dnd.DnDConstants;
+import java.awt.dnd.DropTarget;
+import java.awt.dnd.DropTargetDragEvent;
+import java.awt.dnd.DropTargetDropEvent;
+import java.awt.dnd.DropTargetEvent;
+import java.awt.dnd.DropTargetListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -83,36 +98,75 @@ public class UI {
 	 * Initialize the contents of the frame.
 	 */
 	private void initialize() {
+		final int height = 1000;
 		frame = new JFrame();
 		frame.setTitle("Markdown Editor");
-		frame.setBounds(100, 100, 1000, 708);
+		frame.setBounds(100, 100, 1200, height);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.getContentPane().setLayout(new FlowLayout());
+		frame.getContentPane().setLayout(new FlowLayout(FlowLayout.LEFT,0,0));
+		frame.setResizable(false);
 		
+		//左侧菜单栏
+		JPanel leftPanel = new JPanel();
+		leftPanel.setBackground(new Color(255, 255, 255));
+		frame.getContentPane().add(leftPanel);
+		leftPanel.setPreferredSize(new Dimension(195, height));
+		leftPanel.setLayout(new FlowLayout(FlowLayout.LEFT,0,0));
+		
+		//添加按钮
+		JButton btnNewFile = new JButton("New file");
+		btnNewFile.setBackground(SystemColor.activeCaptionBorder);
+		btnNewFile.setFont(new Font("微软雅黑", Font.PLAIN, 16));
+		btnNewFile.setPreferredSize(new Dimension(195, 40));
+		leftPanel.add(btnNewFile);
+		btnNewFile.setBorder(null);
+		btnNewFile.setFocusPainted(false);
+		btnNewFile.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				textPane.setText("");
+				
+			}
+		});
+		
+		//防止顶格
+		JPanel nonePanel = new JPanel();
+		nonePanel.setBackground(SystemColor.control);
+		frame.getContentPane().add(nonePanel);
+		nonePanel.setPreferredSize(new Dimension(15, height));
+
 		//滚动条
 		JScrollPane textScroll = new JScrollPane();
-		textScroll.setPreferredSize(new Dimension(480, 618));
+		textScroll.setPreferredSize(new Dimension(492, height-120));
 		frame.getContentPane().add(textScroll);
 		JScrollPane editorScroll = new JScrollPane();
-		editorScroll.setPreferredSize(new Dimension(480, 618));
+		editorScroll.setPreferredSize(new Dimension(492, height-120));
 		frame.getContentPane().add(editorScroll);
-		editorScroll.setVerticalScrollBar(textScroll.getVerticalScrollBar());
+		//textScroll.setVerticalScrollBar(editorScroll.getVerticalScrollBar());
 		
 		//输入框
 		textPane = new JTextPane();
-		textPane.setPreferredSize(new Dimension(475, 610));
+		textPane.setBackground(SystemColor.control);
+		textPane.setFont(new Font("微软雅黑", Font.PLAIN, 18));
+		//textPane.setPreferredSize(new Dimension(492, height));
+		//textScroll.setViewportView(textPane);
 		textScroll.setViewportView(textPane);
 		//注册事件
 		textPane.getDocument().addDocumentListener(new Md2Html());
+		//创建拖拽监听器
+		DropListener dropListener = new DropListener();
+		//在textPane上注册拖拽监听器
+		DropTarget target = new DropTarget(textPane, DnDConstants.ACTION_COPY_OR_MOVE, dropListener, true);
 
 		
 		//输出框
 		editorPane = new JEditorPane();
-		editorPane.setBackground(SystemColor.control);
+		editorPane.setBackground(SystemColor.controlHighlight);
 		//设置JEditorPane显示格式为html  
         editorPane.setContentType("text/html"); 
 		editorPane.setEditable(false);
-		editorPane.setPreferredSize(new Dimension(475, 610));
+		//editorPane.setPreferredSize(new Dimension(492, height));
 		editorScroll.setViewportView(editorPane);
 		editorPane.addHyperlinkListener(new LinkListener());
 		
@@ -120,25 +174,112 @@ public class UI {
 		JMenuBar menuBar = new JMenuBar();
 		frame.setJMenuBar(menuBar);
 		
-		JMenu fileMenu = new JMenu("文件");
+		//文件菜单
+		JMenu fileMenu = new JMenu("文件(F)"); 
+		fileMenu.setFont(new Font("微软雅黑", Font.PLAIN, 16));
 		menuBar.add(fileMenu);
+		//设置快捷键为F
+		fileMenu.setMnemonic('F'); 
 		
-		JMenuItem openFileItme = new JMenuItem("打开");
+		//打开文件
+		JMenuItem openFileItme = new JMenuItem("打开(O)");
+		openFileItme.setFont(new Font("微软雅黑", Font.PLAIN, 16));
 		fileMenu.add(openFileItme);
 		openFileItme.addActionListener(new openListener());
+		//设置快捷键为Ctrl+O
+		KeyStroke openKey = KeyStroke.getKeyStroke(KeyEvent.VK_O, InputEvent.CTRL_MASK);
+		openFileItme.setAccelerator(openKey);
 		
-		JMenuItem saveFileItem = new JMenuItem("保存");
+		//保存文件
+		JMenuItem saveFileItem = new JMenuItem("保存(S)");
+		saveFileItem.setFont(new Font("微软雅黑", Font.PLAIN, 16));
 		fileMenu.add(saveFileItem);
 		saveFileItem.addActionListener(new SaveListener());
+		//设置快捷键为Ctrl+S
+		KeyStroke saveKey = KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_MASK);
+		saveFileItem.setAccelerator(saveKey);
 		
-		JMenu helpMenu = new JMenu("帮助");
+		//帮助菜单
+		JMenu helpMenu = new JMenu("帮助(H)");
+		helpMenu.setFont(new Font("微软雅黑", Font.PLAIN, 16));
 		menuBar.add(helpMenu);
+		//设置快捷键为H
+		helpMenu.setMnemonic('H');
 
 		//添加边框
 		LineBorder border = new LineBorder(Color.LIGHT_GRAY);
-		textScroll.setBorder(border);
-		editorScroll.setBorder(border);
+		textScroll.setBorder(null);
+		editorScroll.setBorder(null);
 		menuBar.setBorder(border);
+		
+		JLabel textLabel = new JLabel("输入");
+		textLabel.setFont(new Font("微软雅黑", Font.PLAIN, 16));
+		textLabel.setOpaque(true);
+		textLabel.setBackground(SystemColor.control);
+		textScroll.setColumnHeaderView(textLabel);
+		JLabel editorLabel = new JLabel("输出");
+		editorLabel.setBackground(SystemColor.controlHighlight);
+		editorLabel.setOpaque(true);
+		editorLabel.setFont(new Font("微软雅黑", Font.PLAIN, 16));
+		editorScroll.setColumnHeaderView(editorLabel);
+		
+	}
+	
+	/**
+	 * 实现拖拽文件打开的监听器内部类
+	 * @author 李志浩
+	 * @date 2018年1月8日
+	 */
+	class DropListener implements DropTargetListener {
+
+		@Override
+		public void dragEnter(DropTargetDragEvent arg0) {
+			System.out.println("目标进入区域");
+		}
+
+		@Override
+		public void dragExit(DropTargetEvent arg0) {
+			System.out.println("目标离开区域");
+		}
+
+		@Override
+		public void dragOver(DropTargetDragEvent arg0) {
+			System.out.println("目标在区域内移动");
+		}
+
+		@Override
+		public void drop(DropTargetDropEvent e) {
+			System.out.println("目标在区域内释放");
+			if (e.isDataFlavorSupported(DataFlavor.javaFileListFlavor)) {
+                // 接收目标数据
+                e.acceptDrop(DnDConstants.ACTION_COPY_OR_MOVE);
+                //isAccept = true;
+
+             // 获取File对象
+				try {
+					List<File> files = (List<File>) e.getTransferable().getTransferData(DataFlavor.javaFileListFlavor);
+					File file = files.get(0);
+					BufferedReader br = new BufferedReader(new FileReader(file));
+					String line = "";
+					String lines = "";
+					while ((line = br.readLine())!=null) {
+						lines += (line + "\n");
+					}
+					textPane.setText(lines);
+				} catch (Exception e1) {
+					e1.printStackTrace();
+				}
+
+            }
+            //拖拽完成
+            e.dropComplete(true);
+        }
+
+		@Override
+		public void dropActionChanged(DropTargetDragEvent arg0) {
+			System.out.println("当前drop操作被修改");
+		}
+		
 	}
 	
 	/**
@@ -191,18 +332,30 @@ public class UI {
 		html.append("max-width:100%;");
 		html.append("margin-bottom:20px;");
 		html.append("background-color:transparent;");
-		html.append("border: solid 1px grey;");
+		html.append("border-color:grey;");
 		html.append("border-spacing:2px;");
 		html.append("border-collapse:separete;");
-		html.append("box-sizing:border-box;}");
+		html.append("box-sizing:border-box;");
+		html.append("border-bottom-width: 1px;");
+		html.append("border-bottom-style: solid;");
+		html.append("border-bottom-color: rgb(230, 189, 189);}");
 		html.append("tr{");
 		html.append("display:table-row;");
 		html.append("vertical-align:inherit;");
-		html.append("border-color:inherit;}");
+		html.append("border-color:inherit;");
+		html.append("border-top-width: 1px;");
+		html.append("border-top-style: solid;");
+		html.append("border-top-color: rgb(230, 189, 189);}");
 		html.append("th{");
 		html.append("padding:8px;");
+		html.append("font-size: 12px;");
 		html.append("line-height:1.5;");
-		html.append("text-align:left;}");
+		html.append("text-align:left;");
+		html.append("color: rgb(177, 106, 104);}");
+		html.append("tr:nth-child(even) {");
+		html.append("background: rgb(238, 211, 210)}");
+		html.append("tr:nth-child(odd) {");
+		html.append("background: #FFF}");
 		html.append("</style>");
 		html.append("</head>");
 		html.append("<body>");
@@ -381,5 +534,23 @@ public class UI {
 			
 		}
 		
+	}
+	
+	private static void addPopup(Component component, final JPopupMenu popup) {
+		component.addMouseListener(new MouseAdapter() {
+			public void mousePressed(MouseEvent e) {
+				if (e.isPopupTrigger()) {
+					showMenu(e);
+				}
+			}
+			public void mouseReleased(MouseEvent e) {
+				if (e.isPopupTrigger()) {
+					showMenu(e);
+				}
+			}
+			private void showMenu(MouseEvent e) {
+				popup.show(e.getComponent(), e.getX(), e.getY());
+			}
+		});
 	}
 }
