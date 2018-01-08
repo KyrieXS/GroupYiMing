@@ -77,4 +77,9 @@ public class Lexer {
 		
 		return lines;
 	}
+	
+	public void clear(){
+		this.lines = null;
+		this.analyserList = null;
+	}
 }

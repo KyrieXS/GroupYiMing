@@ -67,10 +67,17 @@ public class Parser {
 		for(int i = 0, size = tokenList.size(); i < size; i++){
 			Rendering render = parserMap.get(tokenList.get(i).getType());
 			render.render(tokenList, i);
+			
+		}
+		for(int i = 0, size = tokenList.size(); i < size; i++){
 			result.append(tokenList.get(i).getValue().getValue()).append("\n");
 		}
-		
 		return result.toString();
 	}
 
+	public void clear(){
+		this.tokenList = null;
+		this.renderingList = null;
+		this.parserMap = null;
+	}
 }

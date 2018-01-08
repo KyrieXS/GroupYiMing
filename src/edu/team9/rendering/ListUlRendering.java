@@ -24,24 +24,17 @@ public class ListUlRendering extends Rendering{
 	
 	public void renderA(List<Token> tokenList, int index){
 		Token token = tokenList.get(index);
-		Token latterToken = tokenList.get(index+1);
-		if(latterToken.getType() == Type.LIST_UL){
-			token.setValue(new Value("<ul><li>" + token.getValue().getValue() + "</li>"));
-		}else{
-			token.setValue(new Value("<ul><li>" + token.getValue().getValue() + "</li></ul>"));
-		}
+		token.setValue(new Value("<ul><li>" + token.getValue().getValue() + "</li></ul>"));
 	}
 	
 	public void renderB(List<Token> tokenList, int index){
 		Token token = tokenList.get(index);
-		Token latterToken = tokenList.get(index+1);
 		Token formerToken = tokenList.get(index-1);
-		if(formerToken.getType() == Type.LIST_UL && latterToken.getType() == Type.LIST_UL){
-			token.setValue(new Value("<li>" + token.getValue().getValue() + "</li>"));
-		}else if(formerToken.getType() == Type.LIST_UL && latterToken.getType() != Type.LIST_UL){
+		if(formerToken.getType() == Type.LIST_UL){
+			String str = formerToken.getValue().getValue();
+			str = str.replace("</ul>", "");
+			formerToken.setValue(new Value(str));
 			token.setValue(new Value("<li>" + token.getValue().getValue() + "</li></ul>"));
-		}else if(formerToken.getType() != Type.LIST_UL && latterToken.getType() == Type.LIST_UL){
-			token.setValue(new Value("<ul><li>" + token.getValue().getValue() + "</li>"));
 		}else{
 			token.setValue(new Value("<ul><li>" + token.getValue().getValue() + "</li></ul>"));
 		}

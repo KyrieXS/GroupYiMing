@@ -19,6 +19,8 @@ public class LinkAnalyser extends Analyser{
 		List<Token> newList = new LinkedList();
 		String val = null;
 		String href = null;
+		boolean found1 = false;
+		boolean found2 = false;
 		int key = 0;
 		for(int i = 0;i < list.size();i++){
 			if(!list.get(i).isCommon()){
@@ -32,12 +34,19 @@ public class LinkAnalyser extends Analyser{
 						if(str.charAt(temp) == ']'){
 							val = str.substring(1, temp);
 							key = temp;
+							found1 = true;
 						}
 						if(str.charAt(temp) == ')'){
 							href = str.substring(key+2, temp);
+							found2 = true;
 						}
 					}
-					newList.add(new Token(Type.LINK,new Value(href.concat(";").concat(val))));
+					if(found1 && found2){
+						newList.add(new Token(Type.LINK,new Value(href.concat(";").concat(val))));
+					}else{
+						newList.add(list.get(i));
+					}
+					
 				}else{
 					newList.add(list.get(i));
 				}
